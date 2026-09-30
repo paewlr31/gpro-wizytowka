@@ -54,7 +54,9 @@ export function GalleryView({ items }: { items: GalleryItem[] }) {
       >
         {active ? (
           <>
-            <img src={active.src} alt={active.alt} />
+            <div className="lightbox-photo">
+              <img src={active.src} alt={active.alt} />
+            </div>
             <div className="lightbox-copy">
               <div>
                 <h2>{active.title}</h2>
