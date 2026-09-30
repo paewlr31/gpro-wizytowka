@@ -7,6 +7,7 @@ type Status = 'idle' | 'sending' | 'sent' | 'error' | 'config'
 
 export function ContactForm() {
   const [status, setStatus] = useState<Status>('idle')
+  const accessKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -14,34 +15,41 @@ export function ContactForm() {
 
     const form = event.currentTarget
     const data = new FormData(form)
-    setStatus('sending')
+    if (String(data.get('company') ?? '').trim()) {
+      setStatus('sent')
+      form.reset()
+      return
+    }
 
+    if (!accessKey) {
+      setStatus('config')
+      return
+    }
+
+    setStatus('sending')
     try {
-      const response = await fetch('/api/kontakt', {
+      const response = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
         body: JSON.stringify({
+          access_key: accessKey,
+          subject: 'Wiadomość ze strony GPRO',
+          from_name: 'Strona GPRO',
           name: String(data.get('name') ?? ''),
           email: String(data.get('email') ?? ''),
-          phone: String(data.get('phone') ?? ''),
+          phone: String(data.get('phone') ?? '').trim() || 'nie podano',
           message: String(data.get('message') ?? ''),
-          company: String(data.get('company') ?? ''),
+          botcheck: '',
         }),
       })
-      const result = (await response.json().catch(() => null)) as {
-        ok?: boolean
-        reason?: string
-      } | null
-
-      if (result?.reason === 'config') {
-        setStatus('config')
-        return
-      }
-      if (!response.ok || !result?.ok) {
+      const result = (await response.json().catch(() => null)) as { success?: boolean } | null
+      if (!result?.success) {
         setStatus('error')
         return
       }
-
       form.reset()
       setStatus('sent')
     } catch {
