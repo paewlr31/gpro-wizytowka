@@ -11,7 +11,6 @@ export const company = {
   email: 'biuro@gpro.com.pl',
   emailHref: 'mailto:biuro@gpro.com.pl',
   nip: '6562305179',
-  // Odbiorca formularza. Po zmianie adresu trzeba raz potwierdzić skrzynkę (mail od FormSubmit) i wdrożyć stronę od nowa.
   formEmail: 'prycerz@student.agh.edu.pl',
   mapLat,
   mapLon,

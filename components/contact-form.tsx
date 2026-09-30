@@ -1,26 +1,56 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { company } from '@/lib/site'
 
-export function ContactForm() {
-  const [nextUrl, setNextUrl] = useState('')
-  const [sent, setSent] = useState(false)
+type Status = 'idle' | 'sending' | 'sent' | 'error' | 'config'
 
-  useEffect(() => {
-    const url = new URL(window.location.href)
-    setSent(url.searchParams.get('wyslano') === '1')
-    url.searchParams.set('wyslano', '1')
-    url.hash = 'kontakt'
-    setNextUrl(url.toString())
-  }, [])
+export function ContactForm() {
+  const [status, setStatus] = useState<Status>('idle')
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (status === 'sending') return
+
+    const form = event.currentTarget
+    const data = new FormData(form)
+    setStatus('sending')
+
+    try {
+      const response = await fetch('/api/kontakt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: String(data.get('name') ?? ''),
+          email: String(data.get('email') ?? ''),
+          phone: String(data.get('phone') ?? ''),
+          message: String(data.get('message') ?? ''),
+          company: String(data.get('company') ?? ''),
+        }),
+      })
+      const result = (await response.json().catch(() => null)) as {
+        ok?: boolean
+        reason?: string
+      } | null
+
+      if (result?.reason === 'config') {
+        setStatus('config')
+        return
+      }
+      if (!response.ok || !result?.ok) {
+        setStatus('error')
+        return
+      }
+
+      form.reset()
+      setStatus('sent')
+    } catch {
+      setStatus('error')
+    }
+  }
 
   return (
-    <form
-      className="contact-form"
-      action={`https://formsubmit.co/${company.formEmail}`}
-      method="POST"
-    >
+    <form className="contact-form" onSubmit={onSubmit}>
       <h3>Napisz do nas</h3>
       <p className="form-intro">Odpowiemy na temat dostępności i współpracy hurtowej.</p>
 
@@ -41,26 +71,27 @@ export function ContactForm() {
         <textarea name="message" required maxLength={4000} rows={5} />
       </label>
 
-      <input type="hidden" name="_subject" value="Wiadomość ze strony GPRO" />
-      <input type="hidden" name="_template" value="table" />
-      <input type="hidden" name="_captcha" value="false" />
-      {nextUrl ? <input type="hidden" name="_next" value={nextUrl} /> : null}
-      <input className="honey" type="text" name="_honey" tabIndex={-1} autoComplete="off" />
+      <input className="honey" type="text" name="company" tabIndex={-1} autoComplete="off" />
 
-      <button className="button" type="submit" disabled={!nextUrl}>
-        Wyślij wiadomość
+      <button className="button" type="submit" disabled={status === 'sending'}>
+        {status === 'sending' ? 'Wysyłanie…' : 'Wyślij wiadomość'}
       </button>
 
-      {sent ? (
+      {status === 'sent' ? (
         <p className="form-status ok" role="status">
           Dziękujemy. Wiadomość została wysłana.
         </p>
-      ) : (
-        <p className="form-intro">
-          Pierwsza wiadomość włącza skrzynkę: na {company.formEmail} przyjdzie mail z linkiem
-          Activate Form. Kliknij go, potem wyślij formularz jeszcze raz.
+      ) : null}
+      {status === 'config' ? (
+        <p className="form-status bad" role="alert">
+          Formularz nie jest jeszcze podłączony. Brak klucza Web3Forms na serwerze.
         </p>
-      )}
+      ) : null}
+      {status === 'error' ? (
+        <p className="form-status bad" role="alert">
+          Nie udało się wysłać wiadomości. Zadzwoń pod {company.phone} albo napisz na {company.email}.
+        </p>
+      ) : null}
     </form>
   )
 }
