@@ -3,7 +3,7 @@
 import { FormEvent, useState } from 'react'
 import { company } from '@/lib/site'
 
-type Status = 'idle' | 'sending' | 'sent' | 'error'
+type Status = 'idle' | 'sending' | 'sent' | 'error' | 'activate' | 'limit'
 
 export function ContactForm() {
   const [status, setStatus] = useState<Status>('idle')
@@ -41,10 +41,16 @@ export function ContactForm() {
           }),
         },
       )
-      const result = (await response.json().catch(() => null)) as { success?: string | boolean } | null
+      const result = (await response.json().catch(() => null)) as {
+        success?: string | boolean
+        message?: string
+      } | null
       const ok = response.ok && (result?.success === true || result?.success === 'true')
       if (!ok) {
-        setStatus('error')
+        const message = result?.message ?? ''
+        if (/activation/i.test(message)) setStatus('activate')
+        else if (response.status === 429 || /rate limit/i.test(message)) setStatus('limit')
+        else setStatus('error')
         return
       }
       form.reset()
@@ -85,6 +91,17 @@ export function ContactForm() {
       {status === 'sent' ? (
         <p className="form-status ok" role="status">
           Dziękujemy. Wiadomość została wysłana.
+        </p>
+      ) : null}
+      {status === 'activate' ? (
+        <p className="form-status bad" role="alert">
+          Formularz trzeba raz włączyć. Na {company.formEmail} poszedł mail z linkiem Activate Form.
+          Kliknij go (sprawdź też spam), a potem wyślij wiadomość jeszcze raz.
+        </p>
+      ) : null}
+      {status === 'limit' ? (
+        <p className="form-status bad" role="alert">
+          Za dużo prób naraz. Odczekaj kilka minut i wyślij ponownie.
         </p>
       ) : null}
       {status === 'error' ? (
