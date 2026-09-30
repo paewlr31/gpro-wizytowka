@@ -15,11 +15,6 @@ export function ContactForm() {
 
     const form = event.currentTarget
     const data = new FormData(form)
-    if (String(data.get('company') ?? '').trim()) {
-      setStatus('sent')
-      form.reset()
-      return
-    }
 
     if (!accessKey) {
       setStatus('config')
@@ -42,7 +37,6 @@ export function ContactForm() {
           email: String(data.get('email') ?? ''),
           phone: String(data.get('phone') ?? '').trim() || 'nie podano',
           message: String(data.get('message') ?? ''),
-          botcheck: '',
         }),
       })
       const result = (await response.json().catch(() => null)) as { success?: boolean } | null
@@ -58,7 +52,7 @@ export function ContactForm() {
   }
 
   return (
-    <form className="contact-form" onSubmit={onSubmit}>
+    <form className="contact-form" onSubmit={onSubmit} autoComplete="on">
       <h3>Napisz do nas</h3>
       <p className="form-intro">Odpowiemy na temat dostępności i współpracy hurtowej.</p>
 
@@ -78,8 +72,6 @@ export function ContactForm() {
         Wiadomość
         <textarea name="message" required maxLength={4000} rows={5} />
       </label>
-
-      <input className="honey" type="text" name="company" tabIndex={-1} autoComplete="off" />
 
       <button className="button" type="submit" disabled={status === 'sending'}>
         {status === 'sending' ? 'Wysyłanie…' : 'Wyślij wiadomość'}

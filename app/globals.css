@@ -449,14 +449,6 @@ button.button:disabled { opacity: 0.65; cursor: wait; }
 
 .contact-form textarea { min-height: 120px; resize: vertical; }
 
-.contact-form .honey {
-  position: absolute;
-  left: -10000px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-
 .form-status { font-size: 15px; margin: 0; }
 .form-status.ok { color: var(--green); }
 .form-status.bad { color: #9b2c2c; }
