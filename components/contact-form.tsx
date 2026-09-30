@@ -1,9 +1,24 @@
 'use client'
 
-import { FormEvent, useState } from 'react'
+import { FocusEvent, FormEvent, useState } from 'react'
 import { company } from '@/lib/site'
 
 type Status = 'idle' | 'sending' | 'sent' | 'error' | 'config'
+
+function unlockField(event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) {
+  event.currentTarget.readOnly = false
+}
+
+const noAutofill = {
+  autoComplete: 'off',
+  autoCorrect: 'off',
+  spellCheck: false,
+  readOnly: true,
+  onFocus: unlockField,
+  'data-lpignore': 'true',
+  'data-1p-ignore': 'true',
+  'data-form-type': 'other',
+} as const
 
 export function ContactForm() {
   const [status, setStatus] = useState<Status>('idle')
@@ -21,6 +36,16 @@ export function ContactForm() {
       return
     }
 
+    const name = String(data.get('gpro_name') ?? '').trim()
+    const email = String(data.get('gpro_mail') ?? '').trim()
+    const phone = String(data.get('gpro_phone') ?? '').trim()
+    const message = String(data.get('gpro_message') ?? '').trim()
+
+    if (!name || !email || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setStatus('error')
+      return
+    }
+
     setStatus('sending')
     try {
       const response = await fetch('https://api.web3forms.com/submit', {
@@ -33,10 +58,10 @@ export function ContactForm() {
           access_key: accessKey,
           subject: 'Wiadomość ze strony GPRO',
           from_name: 'Strona GPRO',
-          name: String(data.get('name') ?? ''),
-          email: String(data.get('email') ?? ''),
-          phone: String(data.get('phone') ?? '').trim() || 'nie podano',
-          message: String(data.get('message') ?? ''),
+          name,
+          email,
+          phone: phone || 'nie podano',
+          message,
         }),
       })
       const result = (await response.json().catch(() => null)) as { success?: boolean } | null
@@ -52,25 +77,25 @@ export function ContactForm() {
   }
 
   return (
-    <form className="contact-form" onSubmit={onSubmit} autoComplete="on">
+    <form className="contact-form" onSubmit={onSubmit} autoComplete="off">
       <h3>Napisz do nas</h3>
-      <p className="form-intro">Odpowiemy na temat dostępności i współpracy hurtowej.</p>
+      <p className="form-intro">Odpowiemy na temat dostępności i współpracy hurtowej. Pola uzupełnij ręcznie.</p>
 
       <label>
         Imię i nazwisko
-        <input name="name" type="text" autoComplete="name" required maxLength={120} />
+        <input name="gpro_name" type="text" required maxLength={120} {...noAutofill} />
       </label>
       <label>
         E-mail
-        <input name="email" type="email" autoComplete="email" required maxLength={160} />
+        <input name="gpro_mail" type="text" inputMode="email" required maxLength={160} {...noAutofill} />
       </label>
       <label>
         Telefon
-        <input name="phone" type="tel" autoComplete="tel" maxLength={40} />
+        <input name="gpro_phone" type="text" inputMode="tel" maxLength={40} {...noAutofill} />
       </label>
       <label>
         Wiadomość
-        <textarea name="message" required maxLength={4000} rows={5} />
+        <textarea name="gpro_message" required maxLength={4000} rows={5} {...noAutofill} />
       </label>
 
       <button className="button" type="submit" disabled={status === 'sending'}>
