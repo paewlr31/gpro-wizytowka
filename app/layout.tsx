@@ -47,8 +47,6 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: company.name,
-    telephone: '+48602695400',
-    email: company.email,
     taxID: company.nip,
     image: '/logo-gpro.jpg',
     address: {

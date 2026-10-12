@@ -40,10 +40,10 @@ export default function OfferPage() {
 
       <section className="offer-note">
         <p>
-          Chcesz poznać aktualną dostępność? Zadzwoń albo wyślij wiadomość formularzem na dole strony.
+          Chcesz poznać aktualną dostępność? Wyślij wiadomość formularzem na dole strony.
         </p>
         <a className="button" href="#kontakt">
-          Dane kontaktowe
+          Napisz do nas
         </a>
       </section>
     </>

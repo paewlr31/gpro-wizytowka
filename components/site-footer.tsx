@@ -25,20 +25,6 @@ export function SiteFooter() {
               </a>
             </p>
           </div>
-          <div>
-            <span>Telefon</span>
-            <p>
-              <a className="contact-strong" href={company.phoneHref}>
-                {company.phone}
-              </a>
-            </p>
-          </div>
-          <div>
-            <span>E-mail</span>
-            <p>
-              <a href={company.emailHref}>{company.email}</a>
-            </p>
-          </div>
         </div>
         <div className="contact-panel">
           <ContactForm />

@@ -1,7 +1,6 @@
 'use client'
 
 import { FocusEvent, FormEvent, useState } from 'react'
-import { company } from '@/lib/site'
 
 type Status = 'idle' | 'sending' | 'sent' | 'error' | 'config'
 
@@ -114,7 +113,7 @@ export function ContactForm() {
       ) : null}
       {status === 'error' ? (
         <p className="form-status bad" role="alert">
-          Nie udało się wysłać wiadomości. Zadzwoń pod {company.phone} albo napisz na {company.email}.
+          Nie udało się wysłać wiadomości. Spróbuj ponownie za chwilę.
         </p>
       ) : null}
     </form>
